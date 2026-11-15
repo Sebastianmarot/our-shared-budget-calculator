@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f6f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Our Budget">
+<title>Our Shared Budget</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: #f4f6f8;
+  color: #17212f;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+main {
+  max-width: 540px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #667085;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px #00000008;
+}
+
+label {
+  display: block;
+  font-weight: 650;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  font-size: 20px;
+  color: #17212f;
+  background: white;
+}
+
+input:focus {
+  outline: 2px solid #3478c8;
+}
+
+.result {
+  padding: 17px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.result:last-child {
+  border-bottom: none;
+}
+
+.result-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.amount {
+  font-size: 25px;
+  font-weight: 750;
+}
+
+.percent {
+  font-size: 14px;
+  color: #667085;
+  margin-top: 5px;
+}
+
+.bar {
+  display: flex;
+  height: 10px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #eee;
+  margin-top: 12px;
+}
+
+.you-bar { background: #16845b; }
+.wife-bar { background: #3478c8; }
+
+.remaining {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.mini {
+  background: #f5f6f8;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.mini small {
+  color: #667085;
+  display: block;
+  margin-bottom: 7px;
+}
+
+.mini strong {
+  font-size: 18px;
+}
+
+.note {
+  font-size: 12px;
+  color: #667085;
+  line-height: 1.5;
+  margin-top: 18px;
+}
+
+button {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+</style>
+</head>
+
+<body>
+<main>
+
+<h1>Our shared budget</h1>
+<p class="subtitle">
+A fair monthly split based on how much each of you earns.
+</p>
+
+<div class="card">
+
+  <div class="field">
+    <label for="incomeYou">Your monthly net income (€)</label>
+    <input id="incomeYou" type="text" inputmode="decimal" value="1900">
+  </div>
+
+  <div class="field">
+    <label for="incomeWife">Your wife's monthly net income (€)</label>
+    <input id="incomeWife" type="text" inputmode="decimal" value="3000">
+  </div>
+
+  <div class="field">
+    <label for="expenses">Total shared monthly expenses (€)</label>
+    <input id="expenses" type="text" inputmode="decimal" value="2269,55">
+  </div>
+
+</div>
+
+<div class="card">
+
+  <h2>Your contributions</h2>
+
+  <div class="result">
+    <div class="result-top">
+      <strong>You</strong>
+      <span class="amount" id="payYou">€0.00</span>
+    </div>
+
+    <div class="percent" id="percentYou">0%</div>
+
+    <div class="bar">
+      <div class="you-bar" id="barYou"></div>
+      <div class="wife-bar" id="barWife"></div>
+    </div>
+  </div>
+
+  <div class="result">
+    <div class="result-top">
+      <strong>Your wife</strong>
+      <span class="amount" id="payWife">€0.00</span>
+    </div>
+
+    <div class="percent" id="percentWife">0%</div>
+  </div>
+
+  <h2>Money left after expenses</h2>
+
+  <div class="remaining">
+    <div class="mini">
+      <small>You</small>
+      <strong id="leftYou">€0.00</strong>
+    </div>
+
+    <div class="mini">
+      <small>Your wife</small>
+      <strong id="leftWife">€0.00</strong>
+    </div>
+  </div>
+
+  <p class="note">
+    Each person's contribution is proportional to their share
+    of the combined household income.
+    Figures are calculated automatically.
+  </p>
+
+</div>
+
+<button onclick="resetCalculator()">Reset figures</button>
+
+</main>
+
+<script>
+
+const fields = [
+  document.getElementById("incomeYou"),
+  document.getElementById("incomeWife"),
+  document.getElementById("expenses")
+];
+
+function number(input) {
+  let value = input.value.trim().replace(/\s/g, "");
+
+  if (value.includes(",") && value.includes(".")) {
+    value = value.replace(/\./g, "").replace(",", ".");
+  } else {
+    value = value.replace(",", ".");
+  }
+
+  const result = Number(value);
+
+  return Number.isFinite(result) && result > 0 ? result : 0;
+}
+
+function euro(value) {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR"
+  }).format(value);
+}
+
+function calculate() {
+
+  const you = number(fields[0]);
+  const wife = number(fields[1]);
+  const expenses = number(fields[2]);
+
+  const combined = you + wife;
+
+  const yourPercentage = combined ? you / combined : 0;
+  const wifePercentage = combined ? wife / combined : 0;
+
+  const yourContribution = expenses * yourPercentage;
+  const wifeContribution = expenses * wifePercentage;
+
+  document.getElementById("payYou").textContent =
+    euro(yourContribution);
+
+  document.getElementById("payWife").textContent =
+    euro(wifeContribution);
+
+  document.getElementById("percentYou").textContent =
+    (yourPercentage * 100).toFixed(2) + "% of combined income";
+
+  document.getElementById("percentWife").textContent =
+    (wifePercentage * 100).toFixed(2) + "% of combined income";
+
+  document.getElementById("leftYou").textContent =
+    euro(you - yourContribution);
+
+  document.getElementById("leftWife").textContent =
+    euro(wife - wifeContribution);
+
+  document.getElementById("barYou").style.width =
+    (yourPercentage * 100) + "%";
+
+  document.getElementById("barWife").style.width =
+    (wifePercentage * 100) + "%";
+
+  // Save figures locally on this device
+  try {
+    localStorage.setItem("budget", JSON.stringify({
+      you: fields[0].value,
+      wife: fields[1].value,
+      expenses: fields[2].value
+    }));
+  } catch (error) {}
+
+}
+
+// Update instantly when typing
+fields.forEach(field => {
+  field.addEventListener("input", calculate);
+  field.addEventListener("change", calculate);
+});
+
+// Restore saved figures
+try {
+  const saved = JSON.parse(localStorage.getItem("budget"));
+
+  if (saved) {
+    fields[0].value = saved.you;
+    fields[1].value = saved.wife;
+    fields[2].value = saved.expenses;
+  }
+} catch (error) {}
+
+function resetCalculator() {
+  fields.forEach(field => field.value = "0");
+  calculate();
+}
+
+calculate();
+
+</script>
+</body>
+</html>
